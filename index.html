@@ -222,6 +222,7 @@ input{font:inherit}
 .char-card.r-rare::before{background:rgba(140,182,255,.8)}
 .char-card.r-epic::before{background:rgba(203,160,255,.82)}
 .char-card.r-legend::before{background:linear-gradient(90deg,#FFD86B,#FFB020,#FFE59A)}
+.char-card.r-myth::before{background:linear-gradient(90deg,#FF7AB6,#FFC83D,#7FE3FF,#C08BFF,#FF7AB6);background-size:200% 100%;animation:fadeShift 3s linear infinite}
 .char-photo{position:relative;width:84px;height:84px}
 .char-photo img{width:84px;height:84px;border-radius:50%;display:block;background:#E6E0CC;box-shadow:0 0 0 3px #fff,0 4px 10px rgba(0,0,0,.2)}
 .char-card.locked .char-photo img{filter:grayscale(1) brightness(.32) contrast(1.1)}
@@ -237,10 +238,14 @@ input{font:inherit}
 .rarity.r-rare{background:#DCE6FF;color:#2347A8}
 .rarity.r-epic{background:#EEDDFF;color:#6A2FB8}
 .rarity.r-legend{background:linear-gradient(90deg,#FFE08A,#FFC83D,#FFE7A6);color:#6B4A00}
+.rarity.r-myth{background:linear-gradient(90deg,#FF9CC8,#FFD66B,#9BEAFF,#D2A8FF,#FF9CC8);background-size:200% auto;color:#3A1450;animation:fadeShift 3s linear infinite}
 .char-status{font-size:13px;font-weight:800;color:var(--text-dark-2);display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
 .char-status svg{width:14px;height:14px}
 .char-card.selected .char-status{color:var(--pen-deep)}
 .char-card.locked .char-status{color:var(--text-dark)}
+.char-req{font-size:12px;font-weight:800;color:var(--text-dark-2);display:flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums;margin-top:-2px}
+.char-req svg{width:14px;height:14px}
+.char-card.locked .met{color:#1E8E52}
 .char-card.shake{animation:shake .4s}
 @keyframes shake{0%,100%{translate:0}20%{translate:-6px}40%{translate:6px}60%{translate:-4px}80%{translate:3px}}
 
@@ -737,29 +742,31 @@ function rr(c, x, y, w, h, r) {
  * 1. ПЕРСОНАЖИ (имена и цены — как в оригинале)
  * ============================================================================
  */
+// cost — сколько общих очков нужно накопить; best — какой нужен рекорд за один раунд
 const CHARACTERS = [
   { id: 'elena',      name: 'Елена',                 cost: 0 },
-  { id: 'svetlana',   name: 'Светлана',              cost: 300 },
-  { id: 'zhanna',     name: 'Жанна',                 cost: 500 },
-  { id: 'vitaly',     name: 'Виталий',               cost: 700 },
-  { id: 'dimas',      name: 'Димас',                 cost: 1000 },
-  { id: 'nina',       name: 'Нина',                  cost: 2000 },
-  { id: 'andrey',     name: 'Андрей',                cost: 5000 },
-  { id: 'svetlana_v', name: 'Светлана Викторовна',   cost: 7000 },
-  { id: 'natalya',    name: 'Наталья',               cost: 10000 },
-  { id: 'galina',     name: 'Галина',                cost: 15000 },
-  { id: 'alla',       name: 'Алла',                  cost: 20000 },
-  { id: 'olga',       name: 'Ольга',                 cost: 25000 },
-  { id: 'lyubov_k',   name: 'Любовь Константиновна', cost: 35000 },
-  { id: 'san_sanych', name: 'Сан Саныч',             cost: 50000 },
-  { id: 'lyubov_v',   name: 'Любовь Владимировна',   cost: 100000 }
+  { id: 'svetlana',   name: 'Светлана',              cost: 1000 },
+  { id: 'zhanna',     name: 'Жанна',                 cost: 2500 },
+  { id: 'vitaly',     name: 'Виталий',               cost: 5000 },
+  { id: 'dimas',      name: 'Димас',                 cost: 8000 },
+  { id: 'nina',       name: 'Нина',                  cost: 12000,  best: 300 },
+  { id: 'andrey',     name: 'Андрей',                cost: 18000,  best: 400 },
+  { id: 'svetlana_v', name: 'Светлана Викторовна',   cost: 25000,  best: 500 },
+  { id: 'natalya',    name: 'Наталья',               cost: 35000,  best: 650 },
+  { id: 'galina',     name: 'Галина',                cost: 50000,  best: 800 },
+  { id: 'alla',       name: 'Алла',                  cost: 70000,  best: 1000 },
+  { id: 'olga',       name: 'Ольга',                 cost: 90000,  best: 1250 },
+  { id: 'lyubov_k',   name: 'Любовь Константиновна', cost: 120000, best: 1500 },
+  { id: 'san_sanych', name: 'Сан Саныч',             cost: 160000, best: 2000 },
+  { id: 'lyubov_v',   name: 'Любовь Владимировна',   cost: 250000, best: 2500 }
 ];
 const CHAR_BY_ID = Object.fromEntries(CHARACTERS.map((c) => [c.id, c]));
 
 function rarityOf(cost) {
-  if (cost >= 50000) return { id: 'legend', name: 'Легендарный' };
-  if (cost >= 15000) return { id: 'epic', name: 'Эпический' };
-  if (cost >= 2000) return { id: 'rare', name: 'Редкий' };
+  if (cost >= 250000) return { id: 'myth', name: 'Мифический' };
+  if (cost >= 90000) return { id: 'legend', name: 'Легендарный' };
+  if (cost >= 25000) return { id: 'epic', name: 'Эпический' };
+  if (cost >= 5000) return { id: 'rare', name: 'Редкий' };
   return { id: 'common', name: 'Обычный' };
 }
 CHARACTERS.forEach((c) => { c.rarity = rarityOf(c.cost); });
@@ -1251,11 +1258,21 @@ function updateStorageWarningUI() {
   if (el) el.hidden = storageAvailable;
 }
 
-// Возвращает массив персонажей, открытых именно сейчас
+// Чего ещё не хватает до персонажа: общих очков и/или рекорда за раунд
+function unlockNeeds(c) {
+  return {
+    points: Math.max(0, c.cost - gameData.totalScore),
+    best: c.best ? Math.max(0, c.best - gameData.bestScore) : 0
+  };
+}
+
+// Возвращает массив персонажей, открытых именно сейчас.
+// Уже открытые раньше персонажи остаются открытыми.
 function checkCharacterUnlocks() {
   const fresh = [];
   for (const c of CHARACTERS) {
-    if (gameData.totalScore >= c.cost && !gameData.unlockedChars.includes(c.id)) {
+    const need = unlockNeeds(c);
+    if (!need.points && !need.best && !gameData.unlockedChars.includes(c.id)) {
       gameData.unlockedChars.push(c.id);
       fresh.push(c);
     }
@@ -1401,22 +1418,44 @@ const PARALLAX = 0.45;
 const CHUNK = 320;
 
 const ZONES = [
-  { at: 0,    name: 'Класс',          top: '#CFE9DD', bot: '#F2EEDC' },
-  { at: 300,  name: 'Небо',           top: '#4FA9EE', bot: '#BFE6FF' },
-  { at: 800,  name: 'Закат',          top: '#5B47A8', bot: '#FF9C6E' },
-  { at: 1400, name: 'Ночь',           top: '#0C1634', bot: '#2A3B7C' },
-  { at: 2200, name: 'Космос',         top: '#04030C', bot: '#1B1042' },
-  { at: 3500, name: 'Край галактики', top: '#13001F', bot: '#4A0C5C' }
+  { at: 0,    name: 'Класс' },
+  { at: 300,  name: 'Небо',           skies: [['#4FA9EE', '#BFE6FF'], ['#3B95DD', '#D3EEFF'], ['#5DB8E8', '#C9F0F2']] },
+  { at: 800,  name: 'Закат',          skies: [['#5B47A8', '#FF9C6E'], ['#7A3E8F', '#FFB36B'], ['#3F4FA8', '#FF7E8A']] },
+  { at: 1400, name: 'Ночь',           skies: [['#0C1634', '#2A3B7C'], ['#120F33', '#3A2C6E'], ['#081C2E', '#1F4A6B']] },
+  { at: 2200, name: 'Космос',         skies: [['#04030C', '#1B1042'], ['#02060E', '#0F2A3D'], ['#07020F', '#2E0B3A']] },
+  { at: 3500, name: 'Край галактики', skies: [['#13001F', '#4A0C5C'], ['#001A1A', '#0C4F4A'], ['#1A0505', '#5C1A0C']] }
 ];
 
-const BOARD_TEXTS = ['2 + 2 = 4', 'a² + b² = c²', 'Д/з: стр. 42', 'E = mc²', 'Классная работа', 'π ≈ 3,14', 'x + 5 = 12', 'Тише! Идёт урок', '5 × 5 = 25', 'Отлично!'];
+// Каждый забег — новый кабинет: цвет стен, узор, предмет и надписи на доске
+const WALLS = [
+  { sky: ['#CFE9DD', '#F2EEDC'], panel: '#86C9AE', edge: '#5FA88A' },
+  { sky: ['#F6DCC4', '#FBF1E2'], panel: '#E3A47A', edge: '#C07F55' },
+  { sky: ['#D6E2F5', '#F1F4FA'], panel: '#8DACDB', edge: '#6687BE' },
+  { sky: ['#E4DAF2', '#F6F1FA'], panel: '#AF95D6', edge: '#8C70BC' },
+  { sky: ['#F2E9BF', '#FBF7E4'], panel: '#D4BE62', edge: '#B39D40' }
+];
+const WALL_PATTERNS = ['tiles', 'stripes', 'panels'];
+const MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+const SUBJECTS = [
+  { name: 'Математика',   posters: ['numbers', 'numbers', 'abc'],  texts: ['a² + b² = c²', 'x + 5 = 12', 'π ≈ 3,14', '7 × 8 = 56', '√144 = 12'] },
+  { name: 'Физика',       posters: ['atom', 'numbers'],            texts: ['E = mc²', 'F = ma', 'v = s / t', 'P = U · I', 'g ≈ 9,8 м/с²'] },
+  { name: 'Химия',        posters: ['periodic', 'atom'],           texts: ['H₂O', 'NaCl', '2H₂ + O₂ → 2H₂O', 'CO₂', 'Лабораторная работа'] },
+  { name: 'Русский язык', posters: ['abc'],                        texts: ['Жи-ши пиши с «и»', 'Ча-ща пиши с «а»', 'Диктант', 'Словарные слова', 'Классная работа'] },
+  { name: 'Литература',   posters: ['abc', 'map'],                 texts: ['«Евгений Онегин»', 'Сочинение', 'Я помню чудное мгновенье…', 'Учить наизусть', 'Эпитет, метафора'] },
+  { name: 'История',      posters: ['map'],                        texts: ['1812 год', 'Контрольная', 'Древний Рим', 'Реформы Петра I', 'Даты учить!'] },
+  { name: 'География',    posters: ['map', 'map', 'periodic'],     texts: ['Материки', 'Евразия', 'Широта и долгота', 'Контурная карта', 'Байкал — 1642 м'] },
+  { name: 'Биология',     posters: ['cell', 'cell', 'map'],        texts: ['Фотосинтез', 'Клетка', 'ДНК', 'Царство грибов', 'Лабораторная работа'] },
+  { name: 'Информатика',  posters: ['code', 'numbers'],            texts: ['print("Привет!")', '1010 + 0101', 'if (x > 5)', 'Алгоритм', 'Ctrl + S'] },
+  { name: 'Музыка',       posters: ['notes'],                      texts: ['До Ре Ми Фа Соль', '♪ ♫ ♪', 'Хор после уроков', 'Чайковский', 'Сольфеджио'] }
+];
 
 const G = {
   player: { x: 0, y: 0, vx: 0, vy: 0, sq: 0, rot: 0, plane: 0, alive: true, spin: 0 },
   platforms: [], items: [], enemies: [], particles: [], popups: [],
   cameraY: 0, startY: 0, playerStartY: 0, maxClimb: 0, bonus: 0, stars: 0, stomps: 0, score: 0,
   highestY: 0, chain: 0, lastPlaneY: 1e9, lastEnemyY: 1e9, zone: 0, recordBeaten: false,
-  frame: 0, shake: 0, sprite: null, spriteDirty: true, decoChunks: new Map(), over: false, moved: false, hintShown: false
+  frame: 0, shake: 0, sprite: null, spriteDirty: true, decoChunks: new Map(), over: false, moved: false, hintShown: false,
+  seed: 1, wall: WALLS[0], wallPattern: 'tiles', subject: SUBJECTS[0], room: 1, sky: [], boardTexts: [], section: null, lastX: 0
 };
 
 const input = { touchL: false, touchR: false, keyL: false, keyR: false, get left() { return this.touchL || this.keyL; }, get right() { return this.touchR || this.keyR; } };
@@ -1427,14 +1466,27 @@ const heightAt = (y) => (G.startY - y) / 10;
 const difficultyAt = (y) => clamp(heightAt(y) / 1600, 0, 1);
 
 function skyColorsAt(h) {
-  let top = ZONES[0].top, bot = ZONES[0].bot;
+  let [top, bot] = G.sky[0];
   for (let i = 1; i < ZONES.length; i++) {
     const t = smoothstep(ZONES[i].at - 140, ZONES[i].at + 40, h);
     if (t <= 0) break;
-    top = mixHex(top, ZONES[i].top, t);
-    bot = mixHex(bot, ZONES[i].bot, t);
+    top = mixHex(top, G.sky[i][0], t);
+    bot = mixHex(bot, G.sky[i][1], t);
   }
   return [top, bot];
+}
+
+// Новый забег — новый уровень: кабинет, предмет, небо, расстановка парт и фон
+function newRun() {
+  const pickR = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  G.seed = Math.floor(Math.random() * 2147483647);
+  G.wall = pickR(WALLS);
+  G.wallPattern = pickR(WALL_PATTERNS);
+  G.subject = pickR(SUBJECTS);
+  G.room = 1 + Math.floor(Math.random() * 45);
+  G.sky = ZONES.map((z, i) => (i === 0 ? G.wall.sky : pickR(z.skies)));
+  const d = new Date();
+  G.boardTexts = G.subject.texts.concat([`${d.getDate()} ${MONTHS_GEN[d.getMonth()]}`, 'Классная работа', `Кабинет №${G.room}`]);
 }
 
 function resizeCanvas() {
@@ -1465,7 +1517,10 @@ function initRound() {
     lastPlaneY: 1e9, lastEnemyY: 1e9, zone: 0, recordBeaten: false, recordFrame: -999, frame: 0, shake: 0, over: false, moved: false
   });
   G.platforms = []; G.items = []; G.enemies = []; G.particles = []; G.popups = [];
+  newRun();
   G.decoChunks.clear();
+  G.section = null;
+  G.lastX = cw / 2 - 50;
   const startY = Math.round(ch - 120);
   G.startY = startY;
   G.platforms.push(makePlatform(cw / 2 - 50, startY, 'normal', 100));
@@ -1479,37 +1534,81 @@ function initRound() {
   showHint();
 }
 
+// Уровень собирается из коротких «узоров» по 4–8 парт, которые выпадают случайно
+function pickSection(h) {
+  const opts = [
+    ['random', 5],
+    ['zigzag', h > 30 ? 2 : 0],
+    ['stairs', h > 30 ? 2 : 0],
+    ['moving', h > 90 ? 1.6 : 0],
+    ['bridge', h > 120 ? 1.3 : 0],
+    ['stars', h > 40 ? 1 : 0],
+    ['library', h > 160 ? 0.8 : 0],
+    ['patrol', h > 260 ? 1.1 : 0]
+  ];
+  let r = Math.random() * opts.reduce((s, o) => s + o[1], 0);
+  let type = 'random';
+  for (const [t, w] of opts) {
+    if (!w) continue;
+    r -= w;
+    if (r <= 0) { type = t; break; }
+  }
+  return { type, left: 4 + Math.floor(Math.random() * 5), dir: Math.random() < 0.5 ? -1 : 1, side: Math.random() < 0.5 };
+}
+
 function generateUpTo(topY) {
   while (G.highestY > topY) {
     const d = difficultyAt(G.highestY);
     const h = heightAt(G.highestY);
-    const gap = lerp(56, 74, d) + Math.random() * lerp(52, 70, d); // всегда < высоты прыжка (~160)
+    if (!G.section || G.section.left <= 0) G.section = G.chain < 6 ? { type: 'random', left: 6 - G.chain } : pickSection(h);
+    const sec = G.section;
+    sec.left--;
+    let gap = lerp(56, 74, d) + Math.random() * lerp(52, 70, d); // всегда < высоты прыжка (~160)
+    if (sec.type === 'moving' || sec.type === 'patrol') gap *= 0.92;
     const prevY = G.highestY;
     G.highestY -= gap;
     G.chain++;
     const w = Math.round(lerp(92, 70, d));
-    const x = 10 + Math.random() * (cw - w - 20);
+    const minX = 10, maxX = cw - w - 10;
+    let x;
+    if (sec.type === 'zigzag') {
+      sec.side = !sec.side;
+      x = sec.side ? rand(minX, Math.max(minX, cw * 0.3 - w / 2)) : rand(Math.min(maxX, cw * 0.7 - w / 2), maxX);
+    } else if (sec.type === 'stairs') {
+      let nx = G.lastX + sec.dir * rand(44, 72);
+      if (nx < minX || nx > maxX) { sec.dir *= -1; nx = G.lastX + sec.dir * rand(44, 72); }
+      x = clamp(nx, minX, maxX);
+    } else {
+      x = rand(minX, maxX);
+    }
+    G.lastX = x;
     let type = 'normal';
     if (G.chain > 6) {
       const r = Math.random();
-      const movingP = h > 60 ? lerp(0.08, 0.36, d) : 0;
-      if (r < 0.075) type = 'spring';
-      else if (r < 0.075 + movingP) type = 'moving';
+      if (sec.type === 'moving') type = 'moving';
+      else if (sec.type === 'library') type = r < 0.45 ? 'spring' : 'normal';
+      else {
+        const movingP = h > 60 ? lerp(0.08, 0.36, d) : 0;
+        if (r < 0.075) type = 'spring';
+        else if (r < 0.075 + movingP) type = 'moving';
+      }
     }
     const p = makePlatform(x, G.highestY, type, w);
     G.platforms.push(p);
 
-    // Старая парта-приманка между основными (ломается после прыжка)
-    if (G.chain > 8 && h > 50 && Math.random() < lerp(0.18, 0.32, d)) {
-      const fx = 10 + Math.random() * (cw - w - 20);
-      G.platforms.push(makePlatform(fx, prevY - gap * rand(0.42, 0.58), 'fragile', w));
+    // Старые парты-приманки между основными (ломаются после прыжка)
+    let decoys = 0;
+    if (sec.type === 'bridge') decoys = Math.random() < 0.5 ? 2 : 1;
+    else if (G.chain > 8 && h > 50 && Math.random() < lerp(0.18, 0.32, d)) decoys = 1;
+    for (let i = 0; i < decoys; i++) {
+      G.platforms.push(makePlatform(rand(minX, maxX), prevY - gap * rand(0.4, 0.6), 'fragile', w));
     }
     // Пятёрки
     if (G.chain > 4 && type !== 'spring') {
-      if (Math.random() < 0.035) {
-        for (let i = 0; i < 3; i++) G.items.push({ kind: 'star', x: p.x + p.w / 2, y: p.y - 52 - i * 40, r: 13, t: i * 0.7, taken: false });
-      } else if (Math.random() < 0.2) {
+      if (sec.type === 'stars' || Math.random() < 0.2) {
         G.items.push({ kind: 'star', x: p.x + p.w / 2, y: p.y - 46, r: 13, t: Math.random() * 6, taken: false });
+      } else if (Math.random() < 0.035) {
+        for (let i = 0; i < 3; i++) G.items.push({ kind: 'star', x: p.x + p.w / 2, y: p.y - 52 - i * 40, r: 13, t: i * 0.7, taken: false });
       }
     }
     // Бумажный самолётик
@@ -1518,7 +1617,8 @@ function generateUpTo(topY) {
       G.lastPlaneY = p.y;
     }
     // Двойки — по другую сторону от парты, чтобы их можно было облететь
-    if (h > 180 && G.chain > 10 && Math.random() < lerp(0.05, 0.14, d) && G.lastEnemyY - p.y > 360) {
+    const patrol = sec.type === 'patrol';
+    if (h > 180 && G.chain > 10 && Math.random() < (patrol ? 0.5 : lerp(0.05, 0.14, d)) && G.lastEnemyY - p.y > (patrol ? 230 : 360)) {
       const onLeft = p.x + p.w / 2 > cw / 2;
       const ex = onLeft ? rand(34, cw * 0.38) : rand(cw * 0.62, cw - 34);
       G.enemies.push({ x: ex, baseX: ex, y: p.y - rand(64, 84), r: 21, t: Math.random() * 6, amp: rand(10, 26), dead: false, vy: 0, rot: 0 });
@@ -1922,18 +2022,31 @@ function enemySprite() {
   });
 }
 
-function wallTile() {
-  return cached('wall', () => {
+function wallTile(pattern) {
+  return cached('wall_' + pattern, () => {
     const [cv, c] = makeCanvas(128, 128);
-    c.strokeStyle = 'rgba(255,255,255,.42)';
-    c.lineWidth = 2;
-    for (let y = 0; y < 128; y += 32) {
-      c.beginPath(); c.moveTo(0, y); c.lineTo(128, y); c.stroke();
-      const off = (y / 32) % 2 === 0 ? 0 : 32;
-      for (let x = off; x < 128; x += 64) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 32); c.stroke(); }
+    if (pattern === 'stripes') {
+      c.fillStyle = 'rgba(255,255,255,.3)';
+      for (let x = 0; x < 128; x += 32) c.fillRect(x, 0, 13, 128);
+      c.fillStyle = 'rgba(30,60,50,.05)';
+      for (let x = 15; x < 128; x += 32) c.fillRect(x, 0, 2, 128);
+    } else if (pattern === 'panels') {
+      c.lineWidth = 2;
+      c.strokeStyle = 'rgba(255,255,255,.5)';
+      rr(c, 9, 9, 110, 110, 6); c.stroke();
+      c.strokeStyle = 'rgba(30,60,50,.07)';
+      rr(c, 12, 12, 104, 104, 5); c.stroke();
+    } else {
+      c.strokeStyle = 'rgba(255,255,255,.42)';
+      c.lineWidth = 2;
+      for (let y = 0; y < 128; y += 32) {
+        c.beginPath(); c.moveTo(0, y); c.lineTo(128, y); c.stroke();
+        const off = (y / 32) % 2 === 0 ? 0 : 32;
+        for (let x = off; x < 128; x += 64) { c.beginPath(); c.moveTo(x, y); c.lineTo(x, y + 32); c.stroke(); }
+      }
+      c.strokeStyle = 'rgba(30,60,50,.06)';
+      for (let y = 2; y < 128; y += 32) { c.beginPath(); c.moveTo(0, y); c.lineTo(128, y); c.stroke(); }
     }
-    c.strokeStyle = 'rgba(30,60,50,.06)';
-    for (let y = 2; y < 128; y += 32) { c.beginPath(); c.moveTo(0, y); c.lineTo(128, y); c.stroke(); }
     return { cv, w: 128, h: 128 };
   });
 }
@@ -1967,7 +2080,7 @@ function getChunk(k) {
   let list = G.decoChunks.get(k);
   if (list) return list;
   list = [];
-  const rng = mulberry32(k * 92821 + 7);
+  const rng = mulberry32((k * 92821 + G.seed) | 0);
   const z = zoneIndexAt(chunkHeight(k) + 40);
   const y0 = k * CHUNK;
   const ry = () => y0 + rng() * CHUNK;
@@ -1979,13 +2092,13 @@ function getChunk(k) {
       list.push({ t: 'window', x: left ? 10 + rng() * 14 : cw - w - 10 - rng() * 14, y: ry(), w, h });
     } else if (r < 0.54) {
       const w = Math.min(cw * 0.62, 230);
-      list.push({ t: 'board', x: left ? 12 : cw - w - 12, y: ry(), w, h: 100, text: pick(BOARD_TEXTS) });
+      list.push({ t: 'board', x: left ? 12 : cw - w - 12, y: ry(), w, h: 100, text: pick(G.boardTexts) });
     } else if (r < 0.68) {
       list.push({ t: 'clock', x: left ? 40 + rng() * 30 : cw - 40 - rng() * 30, y: ry(), r: 22 + rng() * 6, a: rng() });
     } else if (r < 0.86) {
-      list.push({ t: 'poster', kind: pick(['periodic', 'map', 'abc']), x: left ? 14 + rng() * 16 : cw - 100 - rng() * 16, y: ry(), w: 86, h: 66, seed: k });
+      list.push({ t: 'poster', kind: pick(G.subject.posters), x: left ? 14 + rng() * 16 : cw - 100 - rng() * 16, y: ry(), w: 86, h: 66, seed: (k * 7 + G.seed) | 0 });
     } else {
-      list.push({ t: 'shelf', x: left ? 10 : cw - 122, y: ry(), w: 112, seed: k });
+      list.push({ t: 'shelf', x: left ? 10 : cw - 122, y: ry(), w: 112, seed: (k * 13 + G.seed) | 0 });
     }
   } else if (z <= 2) {
     const n = 2 + Math.floor(rng() * 2);
@@ -1994,7 +2107,7 @@ function getChunk(k) {
   } else {
     const n = z >= 4 ? 26 : 16;
     for (let i = 0; i < n; i++) list.push({ t: 'star', x: rng() * cw, y: ry(), r: 0.6 + rng() * 1.5, ph: rng() * TAU });
-    if (z === 3 && k % 6 === 0) list.push({ t: 'moon', x: 60 + rng() * (cw - 120), y: ry(), r: 26 });
+    if (z === 3 && (((k + G.seed) % 6) + 6) % 6 === 0) list.push({ t: 'moon', x: 60 + rng() * (cw - 120), y: ry(), r: 26 });
     if (z === 3 && rng() < 0.4) list.push({ t: 'cloud', x: rng() * cw, y: ry(), s: 0.8 + rng() * 0.6, z });
     if (z >= 4 && rng() < 0.24) list.push({ t: 'planet', x: 40 + rng() * (cw - 80), y: ry(), r: 14 + rng() * 26, c: pick(['#F2A65A', '#69A1FF', '#C08BFF', '#4CC38A', '#7FD3E6']), ring: rng() < 0.5 });
     if (z >= 4 && rng() < 0.2) list.push({ t: 'nebula', x: rng() * cw, y: ry(), r: 90 + rng() * 80, c: z === 5 ? '255,61,168' : '106,92,255' });
@@ -2090,6 +2203,38 @@ function drawDeco(d, y) {
         c.beginPath(); c.ellipse(d.x + 60, y + 40, 16, 14, -0.2, 0, TAU); c.fill();
         c.fillStyle = '#E8C77F';
         c.beginPath(); c.ellipse(d.x + 52, y + 18, 9, 6, 0.5, 0, TAU); c.fill();
+      } else if (d.kind === 'numbers') {
+        c.font = '800 9px Nunito, sans-serif';
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        for (let r = 1; r <= 5; r++) for (let q = 1; q <= 7; q++) {
+          c.fillStyle = r === 1 || q === 1 ? '#FF4D5E' : '#3563D8';
+          c.fillText(String(r * q), d.x + 4 + q * 11, y + 4 + r * 11.5);
+        }
+      } else if (d.kind === 'atom') {
+        const cx = d.x + d.w / 2, cy = y + d.h / 2;
+        c.strokeStyle = '#3563D8'; c.lineWidth = 1.6;
+        for (let i = 0; i < 3; i++) { c.beginPath(); c.ellipse(cx, cy, 30, 10, (i * Math.PI) / 3, 0, TAU); c.stroke(); }
+        c.fillStyle = '#FF4D5E'; c.beginPath(); c.arc(cx, cy, 5, 0, TAU); c.fill();
+      } else if (d.kind === 'cell') {
+        const cx = d.x + d.w / 2, cy = y + d.h / 2;
+        c.fillStyle = '#BDE8B0'; c.beginPath(); c.ellipse(cx, cy, 34, 24, 0.2, 0, TAU); c.fill();
+        c.strokeStyle = '#4C9A3F'; c.lineWidth = 2; c.stroke();
+        c.fillStyle = '#8E5BD6'; c.beginPath(); c.arc(cx + 6, cy - 2, 8, 0, TAU); c.fill();
+        c.fillStyle = '#4CC38A';
+        [[-18, 6], [-10, -10], [18, 10]].forEach(([dx, dy]) => { c.beginPath(); c.ellipse(cx + dx, cy + dy, 5, 3, 0.5, 0, TAU); c.fill(); });
+      } else if (d.kind === 'code') {
+        c.fillStyle = '#1C2A30'; c.fillRect(d.x + 4, y + 4, d.w - 8, d.h - 8);
+        const cols = ['#4CC38A', '#69A1FF', '#FFC83D', '#FF8A80'];
+        for (let i = 0; i < 6; i++) { c.fillStyle = cols[Math.floor(rng() * cols.length)]; c.fillRect(d.x + 10 + (i % 2) * 8, y + 10 + i * 8, 20 + rng() * 34, 3.5); }
+      } else if (d.kind === 'notes') {
+        c.strokeStyle = '#1C2A30'; c.lineWidth = 1;
+        for (let i = 0; i < 5; i++) { c.beginPath(); c.moveTo(d.x + 6, y + 22 + i * 7); c.lineTo(d.x + d.w - 6, y + 22 + i * 7); c.stroke(); }
+        c.fillStyle = '#1C2A30';
+        for (let i = 0; i < 5; i++) {
+          const nx = d.x + 18 + i * 13, ny = y + 22 + Math.floor(rng() * 5) * 7;
+          c.beginPath(); c.ellipse(nx, ny, 4, 3, -0.4, 0, TAU); c.fill();
+          c.fillRect(nx + 2.6, ny - 17, 1.4, 17);
+        }
       } else {
         const letters = ['А', 'Б', 'В', 'Г', 'Д', 'Е'];
         const cols = ['#FF4D5E', '#3563D8', '#2BB673', '#FF8A3D', '#8E5BD6', '#1FB5C9'];
@@ -2182,7 +2327,7 @@ function drawBackground() {
 
   const classW = 1 - smoothstep(170, 330, hCam);
   if (classW > 0.01) {
-    const t = wallTile();
+    const t = wallTile(G.wallPattern);
     const off = ((-G.cameraY * 0.5) % 128 + 128) % 128;
     ctx.globalAlpha = classW * 0.7;
     for (let y = -128 + off; y < ch; y += 128) for (let x = 0; x < cw; x += 128) ctx.drawImage(t.cv, x, y, 128, 128);
@@ -2200,9 +2345,9 @@ function drawFloor() {
   if (floorY > ch + 10) return;
   // крашеная панель стены (как в школьном коридоре)
   const panelTop = floorY - 150;
-  ctx.fillStyle = '#86C9AE';
+  ctx.fillStyle = G.wall.panel;
   ctx.fillRect(0, panelTop, cw, 150);
-  ctx.fillStyle = '#5FA88A';
+  ctx.fillStyle = G.wall.edge;
   ctx.fillRect(0, panelTop, cw, 5);
   ctx.fillStyle = 'rgba(255,255,255,.18)';
   ctx.fillRect(0, panelTop + 5, cw, 2);
@@ -2395,6 +2540,7 @@ function render() {
  */
 const ICON_STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="#FFC83D" stroke="#B97F00" stroke-width="1.2" stroke-linejoin="round"/></svg>';
 const ICON_LOCK = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2.5" fill="currentColor"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="currentColor" stroke-width="2.4"/></svg>';
+const ICON_TROPHY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v4a5 5 0 0 1-10 0z" fill="#FF8A3D"/><path d="M7 6H4.5a2.5 2.5 0 0 0 3 3M17 6h2.5a2.5 2.5 0 0 1-3 3" fill="none" stroke="#FF8A3D" stroke-width="1.8"/><path d="M10.5 13h3v3.5h-3z" fill="#C2490C"/><rect x="8" y="16.5" width="8" height="3" rx="1" fill="#C2490C"/></svg>';
 const ICON_CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const ICON_SOUND_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/></svg>';
 const ICON_SOUND_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>';
@@ -2484,6 +2630,12 @@ function updateMenuWheel() {
 }
 
 // --- Прогресс до следующего персонажа ---
+function needsText(c, need) {
+  if (need.points && need.best) return `Нужно ещё ${fmt(need.points)} ${pointsWord(need.points)} и рекорд за раунд от ${fmt(c.best)}`;
+  if (need.points) return `Нужно ещё ${fmt(need.points)} ${pointsWord(need.points)}`;
+  return `Нужен рекорд за раунд от ${fmt(c.best)} (сейчас ${fmt(gameData.bestScore)})`;
+}
+
 function renderNextUnlock(box, img, text, bar) {
   const nx = nextLockedChar();
   if (!nx) {
@@ -2496,10 +2648,17 @@ function renderNextUnlock(box, img, text, bar) {
   box.classList.remove('done');
   const idx = CHARACTERS.indexOf(nx);
   const prevCost = idx > 0 ? CHARACTERS[idx - 1].cost : 0;
-  const need = nx.cost - gameData.totalScore;
+  const need = unlockNeeds(nx);
   img.src = getAssetSrc(nx.id);
-  text.innerHTML = `До персонажа «${esc(nx.name)}» ещё <b>${fmt(need)}</b> ${pointsWord(need)}`;
-  bar.style.width = clamp((gameData.totalScore - prevCost) / Math.max(1, nx.cost - prevCost), 0, 1) * 100 + '%';
+  let html = `До персонажа «${esc(nx.name)}» `;
+  if (need.points && need.best) html += `ещё <b>${fmt(need.points)}</b> ${pointsWord(need.points)} и рекорд за раунд от <b>${fmt(nx.best)}</b>`;
+  else if (need.points) html += `ещё <b>${fmt(need.points)}</b> ${pointsWord(need.points)}`;
+  else html += `осталось побить рекорд: нужно <b>${fmt(nx.best)}</b> за раунд, у тебя ${fmt(gameData.bestScore)}`;
+  text.innerHTML = html;
+  const frac = need.points
+    ? (gameData.totalScore - prevCost) / Math.max(1, nx.cost - prevCost)
+    : gameData.bestScore / Math.max(1, nx.best);
+  bar.style.width = clamp(frac, 0, 1) * 100 + '%';
 }
 
 // --- Персонажи ---
@@ -2511,15 +2670,20 @@ function renderCharactersScreen() {
   CHARACTERS.forEach((c) => {
     const un = gameData.unlockedChars.includes(c.id);
     const sel = gameData.selectedChar === c.id;
+    const need = unlockNeeds(c);
     const card = document.createElement('button');
     card.className = `char-card paper r-${c.rarity.id}${un ? '' : ' locked'}${sel ? ' selected' : ''}`;
-    card.setAttribute('aria-label', `${c.name}. ${un ? (sel ? 'Выбран' : 'Доступен') : 'Откроется за ' + fmt(c.cost) + ' ' + pointsWord(c.cost)}`);
-    const status = sel
-      ? `${ICON_CHECK}Выбран`
-      : un ? 'Доступен' : `${ICON_STAR}${fmt(c.cost)}`;
+    card.setAttribute('aria-label', `${c.name}. ${un ? (sel ? 'Выбран' : 'Доступен') : needsText(c, need)}`);
+    let status;
+    if (sel) status = `<div class="char-status">${ICON_CHECK}Выбран</div>`;
+    else if (un) status = '<div class="char-status">Доступен</div>';
+    else {
+      status = `<div class="char-status${need.points ? '' : ' met'}">${need.points ? ICON_STAR : ICON_CHECK}${fmt(c.cost)}</div>`;
+      if (c.best) status += `<div class="char-req${need.best ? '' : ' met'}">${need.best ? ICON_TROPHY : ICON_CHECK}рекорд ${fmt(c.best)}</div>`;
+    }
     card.innerHTML = `<div class="char-photo"><img src="${getAssetSrc(c.id)}" alt="">${un ? '' : `<div class="char-lock">${ICON_LOCK}</div>`}${sel ? PEN_CIRCLE : ''}</div>`
       + `<div class="char-name"></div>`
-      + `<div class="char-meta"><span class="rarity r-${c.rarity.id}">${c.rarity.name}</span><div class="char-status">${status}</div></div>`;
+      + `<div class="char-meta"><span class="rarity r-${c.rarity.id}">${c.rarity.name}</span>${status}</div>`;
     card.querySelector('.char-name').textContent = c.name;
     card.addEventListener('click', () => onCharTap(c, card));
     grid.appendChild(card);
@@ -2535,11 +2699,11 @@ function onCharTap(c, card) {
       renderCharactersScreen();
     }
   } else {
-    const need = c.cost - gameData.totalScore;
+    const need = unlockNeeds(c);
     card.classList.remove('shake');
     void card.offsetWidth;
     card.classList.add('shake');
-    toast(`Нужно ещё ${fmt(need)} ${pointsWord(need)}`);
+    toast(needsText(c, need), 2600);
     vibrate(30);
   }
 }
@@ -3147,6 +3311,7 @@ function startGame() {
   unlockQueue.length = 0;
   initRound();
   showScreen('GAME');
+  showBanner(G.subject.name, `кабинет №${G.room}`);
 }
 function pauseGame() {
   if (appState !== 'GAME') return;

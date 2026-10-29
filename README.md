@@ -7,10 +7,11 @@ Everything is in a single `index.html` — no build step, no server code.
 ## What's in the game
 
 - **Gameplay:** your character bounces automatically; you steer left and right. The climb goes from the classroom through the sky, a sunset and night into space.
+- **A new level every run:** each round picks a random subject and classroom (wall colour, pattern, chalkboard writing, posters), new sky colours, and builds the climb from random desk patterns (zigzags, staircases, moving rows, breaking bridges, star trails, textbook libraries, «2» patrols).
 - **Desks:** ordinary, blue (moves sideways), old (breaks after one bounce), and a stack of textbooks (super jump).
 - **Pickups:** gold star «5» (+10 points), paper airplane (flies you up and protects you).
 - **Enemies:** the red «2» ends the round if you touch it from the side or below; land on it from above for +25.
-- **15 characters** with the original names and unlock costs (0 to 100 000 total points).
+- **15 characters** with the original names. Unlocking takes 1 000 to 250 000 total points, and from Нина onwards also a best single-round score (300 up to 2 500). Characters already unlocked stay unlocked.
 - **Daily wheel** (every 12 hours), **ELO ranks** (Без звания → Градиент) with 7-day seasons, profile stats.
 - **Your own photos:** Profile → «Свои фото персонажей» lets you replace any portrait (or the menu background) with a photo. Photos are resized and stored only on that device.
 - Sound effects (synthesised, no audio files), vibration, touch / tilt / keyboard controls.
