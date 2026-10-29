@@ -43,3 +43,8 @@ Open <https://app.netlify.com/drop> and drag this whole folder onto the page. Yo
 ### Install on a phone
 
 Open the site, then **Share → Add to Home Screen** (iPhone) or **⋮ → Install app** (Android). It opens full-screen like an app and keeps working offline.
+
+## Авторы
+
+- Идея — Миша
+- Великий вайбкод — Марк

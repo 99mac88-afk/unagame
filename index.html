@@ -133,7 +133,11 @@ input{font:inherit}
 #screen-splash .logo-una{animation:chalkIn .9s cubic-bezier(.2,.7,.2,1) both}
 #screen-splash .logo-game{animation:popIn .5s .55s cubic-bezier(.3,1.6,.5,1) both}
 #screen-splash .logo-underline path{animation:draw .5s .85s ease-out both}
-.splash-tip{position:absolute;bottom:calc(36px + var(--sab));left:0;right:0;text-align:center;font-family:var(--font-hand);font-size:24px;color:var(--chalk-3);animation:fadeIn .6s 1.1s both}
+.splash-tip{position:absolute;bottom:calc(58px + var(--sab));left:0;right:0;text-align:center;font-family:var(--font-hand);font-size:24px;color:var(--chalk-3);animation:fadeIn .6s 1.1s both}
+.credits{position:relative;z-index:2;text-align:center;font-family:var(--font-hand);font-weight:600;font-size:19px;line-height:1.15;color:var(--chalk-3);text-wrap:balance}
+.credits b{font-weight:700;color:var(--chalk-2)}
+.splash-credits{position:absolute;left:16px;right:16px;bottom:calc(20px + var(--sab));animation:fadeIn .6s 1.3s both}
+#screen-menu .credits{margin-top:-6px}
 @keyframes chalkIn{from{clip-path:inset(0 100% 0 0);opacity:.2}to{clip-path:inset(0 0 0 0);opacity:1}}
 @keyframes popIn{from{transform:rotate(-7deg) scale(.2);opacity:0}to{transform:rotate(-7deg) scale(1);opacity:1}}
 @keyframes draw{from{stroke-dashoffset:220}to{stroke-dashoffset:0}}
@@ -394,12 +398,17 @@ input{font:inherit}
 .howto-item canvas{width:64px;height:44px;display:block}
 .howto-item b{display:block;font-weight:900;font-size:15px}
 .howto-item span{font-size:13px;font-weight:700;color:var(--text-dark-2);line-height:1.3}
+.howto-credits{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 16px;padding-top:10px;border-top:1.5px dashed rgba(28,42,48,.16);font-family:var(--font-hand);font-weight:600;font-size:23px;line-height:1.15;color:var(--ink)}
+.howto-credits b{font-weight:700;color:var(--pen)}
 .howto-ctrl{font-family:var(--font-hand);font-size:22px;font-weight:700;color:var(--ink);line-height:1.15}
 
 /* toast */
 .toast{position:absolute;left:50%;bottom:calc(26px + var(--sab));z-index:95;max-width:calc(100% - 32px);padding:11px 18px;border-radius:14px;background:var(--paper);color:var(--text-dark);font-weight:900;font-size:14px;text-align:center;box-shadow:0 12px 30px rgba(0,0,0,.45);transform:translate(-50%,140%);opacity:0;transition:transform .3s cubic-bezier(.2,.9,.3,1.2),opacity .25s ease;pointer-events:none}
 .toast.show{transform:translate(-50%,0);opacity:1}
 
+@media (max-height:720px){
+  #screen-menu{--stage-h:170px;--ball:80px;gap:12px}
+}
 @media (max-height:640px){
   #screen-menu{--stage-h:150px;--ball:72px}
   .tile{min-height:84px}
@@ -427,6 +436,7 @@ input{font:inherit}
       </div>
     </div>
     <div class="splash-tip">прыгай выше всех</div>
+    <div class="credits splash-credits">Идея — <b>Миша</b> · Великий вайбкод — <b>Марк</b></div>
   </div>
 
   <!-- 2. ГЛАВНОЕ МЕНЮ -->
@@ -486,6 +496,7 @@ input{font:inherit}
         </button>
       </div>
     </div>
+    <div class="credits">Идея — <b>Миша</b> · Великий вайбкод — <b>Марк</b></div>
   </div>
 
   <!-- 3. ИГРОВОЙ HUD (вся область — зона касания) -->
@@ -663,6 +674,7 @@ input{font:inherit}
       <div id="howto-title" class="sheet-title">Как играть</div>
       <div id="howto-ctrl" class="howto-ctrl">Держи палец на левой или правой половине экрана — персонаж летит туда. Прыжки сами!</div>
       <div id="howto-list" class="howto-list"></div>
+      <div class="howto-credits"><span>Идея — <b>Миша</b></span><span>Великий вайбкод — <b>Марк</b></span></div>
       <button id="howto-close" class="btn btn-primary">Понятно</button>
     </div>
   </div>
